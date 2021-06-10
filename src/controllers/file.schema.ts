@@ -1,5 +1,12 @@
 import { FastifySchema, fastify } from "fastify";
 
+const errorObject = {
+  type: 'object',
+  properties: {
+    message: { type: 'string' }
+  }
+}
+
 export const fileSchema: FastifySchema = {
   response: {
     200: {
@@ -8,7 +15,8 @@ export const fileSchema: FastifySchema = {
         message: { type: 'string' },
       },
       additionalProperties: false
-    }
+    },
+    403: errorObject
   }
 }
 
@@ -32,6 +40,9 @@ export const uploadSchema: FastifySchema = {
         uploadedDate: { type: 'string' },
       },
       additionalProperties: false
+    },
+    403: {
+      type: 'object'
     }
   }
 }
@@ -51,7 +62,9 @@ export const confirmSchema: FastifySchema = {
         message: { type: 'string' },
       },
       additionalProperties: false
-    }
+    },
+    403: errorObject,
+    500: errorObject
   }
 }
 

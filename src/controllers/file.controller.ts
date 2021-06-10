@@ -7,6 +7,8 @@ import { uploadFile } from '../services/file.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { moveFileToS3 } from '../services/move-file-s3.service'
+// import BuildResponse from "utilitylayer/src/helper/BuildResponse";
+
 interface FileObject {
   attach_code: string
   file_name: string
@@ -32,7 +34,7 @@ export default class FileController {
     url: '/upload',
     options: { schema: uploadSchema }
   })
-  async postHandler(req: FastifyRequest, reply: FastifyReply): Promise<object> {
+  async postHandler(req: FastifyRequest, reply: FastifyReply): Promise<any> {
     try {
 
       // console.log("Request :: ", req)
@@ -40,29 +42,38 @@ export default class FileController {
       console.log("Raw in request :: ", req.raw)
 
       const bodyTemp: any = req.body
+      const path: string = bodyTemp?.path?.value || 'truck/inprogress/'
 
       // const fileBuff: Buffer = await bodyTemp.file.toBuffer()
       const fileBuff: Buffer = bodyTemp.file._buf
 
       const uploadResult = await uploadFile(fileBuff, {
         Bucket: "cargolink-documents",
-        Key: `${bodyTemp.path.value}${bodyTemp.file.filename}`,
+        Key: `${path}${bodyTemp.file.filename}`,
       })
       let response: any
-      if (uploadResult && Object.keys(uploadResult).length > 0) response = await processAttachCode(bodyTemp.file.filename)
+      if (uploadResult && Object.keys(uploadResult).length > 0) {
+        response = await processAttachCode(bodyTemp.file.filename)
 
-      return {
-        ...response,
-        token: response.attach_code,
-        fileUrl: uploadResult.Location,
-        fileType: bodyTemp.file.mimetype,
-        uploadedDate: new Date()
+        return {
+          ...response,
+          token: response.attach_code,
+          fileUrl: uploadResult.Location,
+          fileType: bodyTemp.file.mimetype,
+          uploadedDate: new Date()
+        }
+      } else return {
+        file_name: null,
+        attach_code: null,
+        token: null,
+        fileUrl: null,
+        fileType: null,
+        uploadedDate: null,
       }
 
     } catch (error) {
       console.log("Error Throw :: ", error)
-      throw error;
-
+      return { message: JSON.stringify(error) }
     }
   }
 
@@ -73,7 +84,7 @@ export default class FileController {
     url: '/confirm',
     options: { schema: confirmSchema }
   })
-  async confirmHandler(req: FastifyRequest<{ Body: { url: string, type: string } }>, reply: FastifyReply): Promise<object> {
+  async confirmHandler(req: FastifyRequest<{ Body: { url: string, type: string } }>, reply: FastifyReply): Promise<any> {
     try {
       let token = req.body.url
       const repo = new AttachCodeRepository()
@@ -86,7 +97,13 @@ export default class FileController {
         const destPath: string = `${req.body.type}/active/`
         const destBucket: string = process.env.bucket || "cargolink-documents"
         const region: string = process.env.region || 'ap-southeast-1'
-
+        console.log("Object detail :: ", {
+          srcPath,
+          srcBucket,
+          destPath,
+          destBucket,
+          region
+        })
         const result = await moveFileToS3(srcPath, srcBucket, destPath, destBucket, region)
 
         if (result) return { message: 'confirm success' }
@@ -96,8 +113,7 @@ export default class FileController {
 
     } catch (error) {
       console.log("Error Throw :: ", error)
-      throw error;
-
+      return { message: JSON.stringify(error) }
     }
   }
 
