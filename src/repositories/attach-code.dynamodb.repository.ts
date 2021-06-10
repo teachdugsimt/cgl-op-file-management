@@ -1,18 +1,17 @@
 import * as AWS from 'aws-sdk';
 
-interface UserCreate {
-  username: string
-  password: string
-  mobileNo?: string
+export interface AttachCode {
+  attach_code: string
+  file_name: string
 }
 
-const documentClient = new AWS.DynamoDB.DocumentClient()
+const documentClient = new AWS.DynamoDB.DocumentClient({ region: 'ap-southeast-1' })
 
 export default class AttachCodeRepository {
 
-  async create(data: UserCreate): Promise<any> {
+  async create(data: AttachCode): Promise<any> {
     const params = {
-      TableName: process.env.USER_DYNAMO || 'cgl_user_demo',
+      TableName: process.env.USER_DYNAMO || 'cgl_attach_code',
       Item: data
     };
 

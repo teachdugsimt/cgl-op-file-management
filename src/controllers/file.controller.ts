@@ -4,6 +4,7 @@ import { Controller, GET, POST, getInstanceByToken, FastifyInstanceToken } from 
 import PingService from '../services/ping.service';
 import { fileSchema, uploadSchema } from './file.schema';
 import { uploadFile } from '../services/file.service'
+import { processAttachCode } from '../services/generate-attach-code.service'
 
 interface FileStructor {
   Body: {
@@ -38,7 +39,6 @@ export default class FileController {
           type: 'object',
           // properties: {
           //   path: { type: 'string' },  // bucket s3 path
-          //   fileType: { type: 'string' }, // truck , documents
           //   file: { isFileType: true }
           // },
         },
@@ -46,7 +46,9 @@ export default class FileController {
           200: {
             type: 'object',
             properties: {
-              message: { type: 'string' },
+              attach_code: { type: 'string' },
+              token: { type: 'string' },
+              file_name: { type: 'string' }
             },
             additionalProperties: false
           }
@@ -65,18 +67,18 @@ export default class FileController {
 
       // const fileBuff: Buffer = await bodyTemp.file.toBuffer()
       const fileBuff: Buffer = bodyTemp.file._buf
-      const fileType: string = bodyTemp.fileType.value
 
       const uploadResult = await uploadFile(fileBuff, {
         Bucket: "cargolink-documents",
         Key: `${bodyTemp.path.value}${bodyTemp.file.filename}`,
       })
+      let response: any
+      if (uploadResult) response = await processAttachCode(bodyTemp.file.filename)
 
       console.log("Upload Result :: ", uploadResult)
-      return { message: 'test success' }
+      return { ...response }
 
     } catch (error) {
-
       console.log("Error Throw :: ", error)
       throw error;
 

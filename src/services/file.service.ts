@@ -10,7 +10,7 @@ import {
 
 const client = new S3Client({ region: 'ap-southeast-1' })
 
-export const uploadFile = async (file: Buffer, createParams: CreateMultipartUploadCommandInput): Promise<void> => {
+export const uploadFile = async (file: Buffer, createParams: CreateMultipartUploadCommandInput): Promise<any> => {
   try {
     const createUploadResponse = await client.send(
       new CreateMultipartUploadCommand(createParams)
@@ -65,6 +65,7 @@ export const uploadFile = async (file: Buffer, createParams: CreateMultipartUplo
     console.log('Completing upload...')
     const completeData = await client.send(new CompleteMultipartUploadCommand(completeParams))
     console.log('Upload complete: ', completeData, '\n---')
+    return completeData
   } catch (e) {
     console.log("Erro service :: ", e)
     throw e
