@@ -2,16 +2,14 @@ import { doesNotMatch } from 'assert/strict';
 import { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
 import { Controller, GET, POST, getInstanceByToken, FastifyInstanceToken } from 'fastify-decorators';
 import PingService from '../services/ping.service';
-import { fileSchema, uploadSchema } from './file.schema';
+import { fileSchema, uploadSchema, confirmSchema } from './file.schema';
 import { uploadFile } from '../services/file.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
-
-interface FileStructor {
-  Body: {
-    path: string | undefined
-    fileType: string | undefined
-  }
-  file: any
+import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
+import { moveFileToS3 } from '../services/move-file-s3.service'
+interface FileObject {
+  attach_code: string
+  file_name: string
 }
 
 @Controller({ route: '/api/v1/media/' })
@@ -32,32 +30,7 @@ export default class FileController {
 
   @POST({
     url: '/upload',
-    options: {
-      // schema: uploadSchema
-      schema: {
-        body: {
-          type: 'object',
-          // properties: {
-          //   path: { type: 'string' },  // bucket s3 path
-          //   file: { isFileType: true }
-          // },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              attach_code: { type: 'string' },
-              token: { type: 'string' },
-              file_name: { type: 'string' },
-              fileUrl: { type: 'string' },
-              fileType: { type: 'string' },
-              uploadedDate: { type: 'string' },
-            },
-            additionalProperties: false
-          }
-        }
-      }
-    }
+    options: { schema: uploadSchema }
   })
   async postHandler(req: FastifyRequest, reply: FastifyReply): Promise<object> {
     try {
@@ -85,6 +58,41 @@ export default class FileController {
         fileType: bodyTemp.file.mimetype,
         uploadedDate: new Date()
       }
+
+    } catch (error) {
+      console.log("Error Throw :: ", error)
+      throw error;
+
+    }
+  }
+
+
+
+
+  @POST({
+    url: '/confirm',
+    options: { schema: confirmSchema }
+  })
+  async confirmHandler(req: FastifyRequest<{ Body: { url: string, type: string } }>, reply: FastifyReply): Promise<object> {
+    try {
+      let token = req.body.url
+      const repo = new AttachCodeRepository()
+      const filename: FileObject = await repo.findByAttachCode(token)
+      console.log("File name object :: ", filename)
+      if (filename) {
+
+        const srcPath: string = `${req.body.type}/inprogress/${filename.file_name}`
+        const srcBucket: string = process.env.bucket || "cargolink-documents"
+        const destPath: string = `${req.body.type}/active/`
+        const destBucket: string = process.env.bucket || "cargolink-documents"
+        const region: string = process.env.region || 'ap-southeast-1'
+
+        const result = await moveFileToS3(srcPath, srcBucket, destPath, destBucket, region)
+
+        if (result) return { message: 'confirm success' }
+        else return { message: "move file unsuccess" }
+
+      } else return { message: "Don't have this attach_code in database" }
 
     } catch (error) {
       console.log("Error Throw :: ", error)

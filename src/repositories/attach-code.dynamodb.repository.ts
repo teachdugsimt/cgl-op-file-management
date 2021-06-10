@@ -11,7 +11,7 @@ export default class AttachCodeRepository {
 
   async create(data: AttachCode): Promise<any> {
     const params = {
-      TableName: process.env.USER_DYNAMO || 'cgl_attach_code',
+      TableName: process.env.table_attach_code || 'cgl_attach_code',
       Item: data
     };
 
@@ -20,7 +20,7 @@ export default class AttachCodeRepository {
 
   // async findAllByMobileNo(mobileNo: string): Promise<any> {
   //   const params = {
-  //     TableName: process.env.USER_DYNAMO || 'cgl_user_demo',
+  //     TableName: process.env.table_attach_code || 'cgl_attach_code',
   //     FilterExpression: "attribute_not_exists(mobileNo) or mobileNo = :null",
   //     ExpressionAttributeValues: {
   //         ':null': null
@@ -35,11 +35,11 @@ export default class AttachCodeRepository {
   // })
   // }
 
-  async findByUsername(username: string): Promise<any> {
+  async findByAttachCode(attach_code: string): Promise<any> {
     const params = {
-      TableName: process.env.USER_DYNAMO || 'cgl_user_demo',
+      TableName: process.env.table_attach_code || 'cgl_attach_code',
       Key: {
-        username: username,
+        attach_code: attach_code,
       },
     };
 
@@ -49,7 +49,7 @@ export default class AttachCodeRepository {
 
   async findByMobeilNo(mobileNo: string): Promise<any> {
     const params = {
-      TableName: process.env.USER_DYNAMO || 'cgl_user_demo',
+      TableName: process.env.table_attach_code || 'cgl_attach_code',
       Key: {
         mobileNo: mobileNo,
       },
