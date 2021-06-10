@@ -48,7 +48,10 @@ export default class FileController {
             properties: {
               attach_code: { type: 'string' },
               token: { type: 'string' },
-              file_name: { type: 'string' }
+              file_name: { type: 'string' },
+              fileUrl: { type: 'string' },
+              fileType: { type: 'string' },
+              uploadedDate: { type: 'string' },
             },
             additionalProperties: false
           }
@@ -73,10 +76,15 @@ export default class FileController {
         Key: `${bodyTemp.path.value}${bodyTemp.file.filename}`,
       })
       let response: any
-      if (uploadResult) response = await processAttachCode(bodyTemp.file.filename)
+      if (uploadResult && Object.keys(uploadResult).length > 0) response = await processAttachCode(bodyTemp.file.filename)
 
-      console.log("Upload Result :: ", uploadResult)
-      return { ...response }
+      return {
+        ...response,
+        token: response.attach_code,
+        fileUrl: uploadResult.Location,
+        fileType: bodyTemp.file.mimetype,
+        uploadedDate: new Date()
+      }
 
     } catch (error) {
       console.log("Error Throw :: ", error)

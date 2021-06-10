@@ -19,9 +19,6 @@ const uploadAttachCode = async (code: string, filename: string) => {
 export const processAttachCode = async (filename: string) => {
   const token = generateAttachCode(64)
   const result = await uploadAttachCode(token, filename)
-  return {
-    ...result,
-    token: result.attach_code
-  }
+  return { ...result }
 }
 
