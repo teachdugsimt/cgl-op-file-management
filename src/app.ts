@@ -12,9 +12,15 @@ function build(opts: object = configApp) {
   app.register(fastifyBlipp)
   app.register(require('fastify-swagger'), configSwagger)
 
+  app.register(require('fastify-multipart'), {
+    attachFieldsToBody: true,
+    sharedSchemaId: '#mySharedSchema',
+  })
+
   app.register(bootstrap, {
     directory: resolve(__dirname, `controllers`),
     mask: /\.controller\./,
+
   });
 
   return app

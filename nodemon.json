@@ -9,6 +9,6 @@
     "watch": [
         "src/"
     ],
-    "exec": "ts-node ./src/app.ts",
+    "exec": "ts-node ./src/server.ts",
     "ext": "js,json,ts"
 }
