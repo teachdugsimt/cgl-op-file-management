@@ -99,6 +99,7 @@ export default class AttachCodeRepository {
     // NOTE : Query => must specify primary key
     // const params: DocumentClient.QueryInput = {
     //   TableName: "cgl_attach_code",
+    
     //   KeyConditionExpression: 'begins_with(#file_name, :file_name)',
     //   ExpressionAttributeNames: {
     //     // "#user_id": "user_id",
