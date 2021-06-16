@@ -34,7 +34,7 @@
     "fastify-plugin": "^3.0.0",
     "fastify-swagger": "^4.7.0",
     "pino-pretty": "^4.7.1",
-    "utilitylayer": "git+https://git-codecommit.ap-southeast-1.amazonaws.com/v1/repos/utility-layer"
+    "utility-layer": "git+https://git-codecommit.ap-southeast-1.amazonaws.com/v1/repos/utility-layer#master"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.1.1",

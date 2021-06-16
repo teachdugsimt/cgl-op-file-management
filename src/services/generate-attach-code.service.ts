@@ -6,19 +6,35 @@ const generateAttachCode = (length: number) => {
   return token
 }
 
-const uploadAttachCode = async (code: string, filename: string) => {
+const addDays = (date: Date, days: number) => {
+  var result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+const uploadAttachCode = async (code: string, parseFileName: string, userId: string, frontPath: string, statusPath: string) => {
   const repo = new AttachCodeRepository()
+  let now = new Date()
+  let nowAddDays = addDays(now, 2)
+  let newTime = nowAddDays.getTime()
   const data: AttachCode = {
     attach_code: code,
-    file_name: filename
+    file_name: parseFileName,
+    user_id: userId,
+    type: frontPath,
+    status: statusPath,
   }
-  await repo.create(data)
+  const params = {
+    ...data,
+    expire: Math.floor(newTime / 1000),
+  }
+  await repo.create(params)
   return data
 }
 
-export const processAttachCode = async (filename: string) => {
+export const processAttachCode = async (parseFileName: string, userId: string, frontPath: string, statusPath: string) => {
   const token = generateAttachCode(64)
-  const result = await uploadAttachCode(token, filename)
+  const result = await uploadAttachCode(token, parseFileName, userId, frontPath, statusPath)
+  console.log("Result service :: ", result)
   return { ...result }
 }
-

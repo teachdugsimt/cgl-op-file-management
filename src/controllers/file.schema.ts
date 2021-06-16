@@ -3,7 +3,10 @@ import { FastifySchema, fastify } from "fastify";
 const errorObject = {
   type: 'object',
   properties: {
-    message: { type: 'string' }
+    isBase64Encoded: { type: 'boolean' },
+    statusCode: { type: 'number' },
+    headers: { type: 'object', properties: { origin: { type: 'string' } } },
+    body: { type: 'string' }
   }
 }
 
@@ -35,6 +38,9 @@ export const uploadSchema: FastifySchema = {
         attach_code: { type: 'string' },
         token: { type: 'string' },
         file_name: { type: 'string' },
+        user_id: { type: 'string' },
+        type: { type: 'string' },
+        status: { type: 'string' },
         fileUrl: { type: 'string' },
         fileType: { type: 'string' },
         uploadedDate: { type: 'string' },
@@ -50,10 +56,6 @@ export const uploadSchema: FastifySchema = {
 export const confirmSchema: FastifySchema = {
   body: {
     type: 'object',
-    properties: {
-      url: { type: 'string' },
-      type: { type: 'string' },
-    },
   },
   response: {
     200: {

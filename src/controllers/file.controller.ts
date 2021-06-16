@@ -7,11 +7,16 @@ import { uploadFile } from '../services/file.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { moveFileToS3 } from '../services/move-file-s3.service'
-// import BuildResponse from "utilitylayer/src/helper/BuildResponse";
+// import BuildResponse from "utility-layer/dist/build-response";
+// const buildResponse = new BuildResponse()
 
 interface FileObject {
   attach_code: string
   file_name: string
+  user_id: string
+  type?: string
+  status?: string
+  expire?: number | string
 }
 
 @Controller({ route: '/api/v1/media/' })
@@ -42,19 +47,29 @@ export default class FileController {
       console.log("Raw in request :: ", req.raw)
 
       const bodyTemp: any = req.body
-      const path: string = bodyTemp?.path?.value || 'truck/inprogress/'
+
+      // USER_AVATAR | USER_DOC | VEHICLE_DOC | VEHICLE_IMAGE/{FRONT,BACK,LEFT,RIGHT}
+      const path: string = bodyTemp?.path?.value
+      const userId: string = bodyTemp?.userId?.value || ''
 
       // const fileBuff: Buffer = await bodyTemp.file.toBuffer()
       const fileBuff: Buffer = bodyTemp.file._buf
 
+
+      const frontPath: string = path.split("/").slice(0, path.split("/").length - 2).join("/")
+      const statusPath: string = path.split("/").slice(path.split("/").length - 2).join("")
+      const today = new Date()
+      const parseFileName = `${userId}-${frontPath.replace("/", "-")}-${today.getTime()}`
+
       const uploadResult = await uploadFile(fileBuff, {
         Bucket: "cargolink-documents",
-        Key: `${path}${bodyTemp.file.filename}`,
+        Key: `${path}${parseFileName}`,
       })
+
       let response: any
       if (uploadResult && Object.keys(uploadResult).length > 0) {
-        response = await processAttachCode(bodyTemp.file.filename)
-
+        response = await processAttachCode(parseFileName, userId, frontPath, statusPath)
+        console.log("Response ::  ", response)
         return {
           ...response,
           token: response.attach_code,
@@ -84,37 +99,50 @@ export default class FileController {
     url: '/confirm',
     options: { schema: confirmSchema }
   })
-  async confirmHandler(req: FastifyRequest<{ Body: { url: string, type: string } }>, reply: FastifyReply): Promise<any> {
+  async confirmHandler(req: FastifyRequest<{ Body: string | { url: string[] } }>, reply: FastifyReply): Promise<any> {
     try {
-      let token = req.body.url
+      let attach_array = typeof req.body == "string" ? JSON.parse(req.body).url : req.body.url
+      console.log("Step 1 :: ", attach_array)
       const repo = new AttachCodeRepository()
-      const filename: FileObject = await repo.findByAttachCode(token)
-      console.log("File name object :: ", filename)
-      if (filename) {
+      const fileObject: FileObject[] = await repo.queryFromAttachCode(attach_array)
+      console.log("File name object :: ", fileObject)
 
-        const srcPath: string = `${req.body.type}/inprogress/${filename.file_name}`
-        const srcBucket: string = process.env.bucket || "cargolink-documents"
-        const destPath: string = `${req.body.type}/active/`
-        const destBucket: string = process.env.bucket || "cargolink-documents"
-        const region: string = process.env.region || 'ap-southeast-1'
-        console.log("Object detail :: ", {
-          srcPath,
-          srcBucket,
-          destPath,
-          destBucket,
-          region
-        })
-        const result = await moveFileToS3(srcPath, srcBucket, destPath, destBucket, region)
+      if (fileObject && Array.isArray(fileObject) && fileObject.length > 0) {
 
-        if (result) return { message: 'confirm success' }
+        let parseFileObject = fileObject.filter(e => e.status && e.status == "INPROGRESS")
+
+        const loopResult = await Promise.all(parseFileObject.map(async e => {
+          const srcPath: string = `${e.type}/INPROGRESS/${e.file_name}`
+          const srcBucket: string = process.env.bucket || "cargolink-documents"
+          const destPath: string = `${e.type}/ACTIVE/`
+          const destBucket: string = process.env.bucket || "cargolink-documents"
+          const region: string = process.env.region || 'ap-southeast-1'
+          console.log("Object detail :: ", {
+            srcPath,
+            srcBucket,
+            destPath,
+            destBucket,
+            region
+          })
+          const result = await moveFileToS3(srcPath, srcBucket, destPath, destBucket, region)
+          if (result) await repo.updateStatus({ attach_code: e.attach_code }, "ACTIVE", "status")
+          return result
+        }))
+        console.log("loopResult  result :: ", loopResult)
+
+        if (loopResult && loopResult.length > 0) return { message: 'confirm success' }
         else return { message: "move file unsuccess" }
 
-      } else return { message: "Don't have this attach_code in database" }
+
+
+
+      } else return { message: "Don't have these attach_code in database" }
 
     } catch (error) {
       console.log("Error Throw :: ", error)
-      return { message: JSON.stringify(error) }
+      throw error
     }
   }
 
 }
+ // USER_AVATAR | USER_DOC | VEHICLE_DOC | VEHICLE_IMAGE/{FRONT,BACK,LEFT,RIGHT}
