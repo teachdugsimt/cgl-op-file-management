@@ -82,43 +82,25 @@ export default class AttachCodeRepository {
     return Item && Object.keys(Item)?.length ? Item : null
   }
 
-  async queryWithFilenameBegin(): Promise<any> {
-    const prefixString = "tes"
+  async queryWithFilenameBegin(str: string): Promise<any> {
     const params = {
       TableName: "cgl_attach_code",
       FilterExpression: 'begins_with(#user_id, :user_id)',
       ExpressionAttributeValues: {
-        ':user_id': prefixString
+        ':user_id': str
       },
       ExpressionAttributeNames: {
         '#user_id': "user_id"
       },
     };
     return await documentClient.scan(params).promise();
-
-    // NOTE : Query => must specify primary key
-    // const params: DocumentClient.QueryInput = {
-    //   TableName: "cgl_attach_code",
-    
-    //   KeyConditionExpression: 'begins_with(#file_name, :file_name)',
-    //   ExpressionAttributeNames: {
-    //     // "#user_id": "user_id",
-    //     "#file_name": 'file_name'
-    //   },
-    //   ExpressionAttributeValues: {
-    //     // ":user_id": "1234",
-    //     ":file_name": "artist88"
-    //   }
-    // };
-    // return await documentClient.query(params).promise();
-
   }
 
 }
 
 // const main = async () => {
 //   const repo = new AttachCodeRepository()
-//   const res = await repo.queryWithFilenameBegin()
+//   const res = await repo.queryWithFilenameBegin("ar")
 //   console.log("Result : ", res)
 // }
 // main()
