@@ -36,6 +36,7 @@ export default class FileController {
       console.log("Param : ", req.query)
       const repo = new AttachCodeRepository()
       const result = await repo.queryByUserIdAndType(req.query.userId, req.query.fileType, req.query?.status)
+      console.log("Result :: ", result)
       return { data: result?.Items || [] }
     } catch (error: any) {
       console.log("Error Throw :: ", error)

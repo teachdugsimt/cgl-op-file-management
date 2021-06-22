@@ -122,9 +122,9 @@ export default class AttachCodeRepository {
 
 }
 
-const main = async () => {
-  const repo = new AttachCodeRepository()
-  const res = await repo.queryByUserIdAndType("artist88", "USER_DOC", "ACTIVE")
-  console.log("Result : ", res)
-}
-main()
+// const main = async () => {
+//   const repo = new AttachCodeRepository()
+//   const res = await repo.queryByUserIdAndType("artist88", "USER_DOC", "ACTIVE")
+//   console.log("Result : ", res)
+// }
+// main()
