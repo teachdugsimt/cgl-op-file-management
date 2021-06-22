@@ -26,13 +26,21 @@ export default class FileController {
   public static instance: FastifyInstance = getInstanceByToken(FastifyInstanceToken);
 
   @GET({
-    url: '/upload',
+    url: '/file',
     options: {
       schema: fileSchema
     }
   })
-  async getHandler(req: FastifyRequest, reply: FastifyReply): Promise<object> {
-    return { message: this.pingService?.ping() }
+  async getHandler(req: FastifyRequest<{ Querystring: { userId: string, fileType: string } }>, reply: FastifyReply): Promise<object> {
+    try {
+      console.log("Param : ", req.query)
+      const repo = new AttachCodeRepository()
+      const result = await repo.queryByUserIdAndType(req.query.userId, req.query.fileType)
+      return { data: result?.Items || [] }
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      return { message: JSON.stringify(error) }
+    }
   }
 
   @POST({

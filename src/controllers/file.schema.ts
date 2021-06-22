@@ -9,27 +9,37 @@ const errorObject = {
     body: { type: 'string' }
   }
 }
+const normalError = {
+  type: 'object',
+  properties: {
+    message: { type: 'string' }
+  }
+}
 
 export const fileSchema: FastifySchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      userId: { type: 'string' },
+      fileType: { type: 'string' }
+    }
+  },
   response: {
     200: {
       type: 'object',
       properties: {
-        message: { type: 'string' },
+        data: { type: 'array' },
       },
       additionalProperties: false
     },
-    403: errorObject
+
+    403: normalError,
   }
 }
 
 export const uploadSchema: FastifySchema = {
   body: {
     type: 'object',
-    // properties: {
-    //   path: { type: 'string' },  // bucket s3 path
-    //   file: { isFileType: true }
-    // },
   },
   response: {
     200: {
