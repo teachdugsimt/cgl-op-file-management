@@ -21,7 +21,8 @@ export const fileSchema: FastifySchema = {
     type: 'object',
     properties: {
       userId: { type: 'string' },
-      fileType: { type: 'string' }
+      fileType: { type: 'string' },
+      status: { type: 'string' },
     }
   },
   response: {

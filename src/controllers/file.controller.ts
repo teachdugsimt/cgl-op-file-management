@@ -31,11 +31,11 @@ export default class FileController {
       schema: fileSchema
     }
   })
-  async getHandler(req: FastifyRequest<{ Querystring: { userId: string, fileType: string } }>, reply: FastifyReply): Promise<object> {
+  async getHandler(req: FastifyRequest<{ Querystring: { userId: string, fileType: string, status?: string } }>, reply: FastifyReply): Promise<object> {
     try {
       console.log("Param : ", req.query)
       const repo = new AttachCodeRepository()
-      const result = await repo.queryByUserIdAndType(req.query.userId, req.query.fileType)
+      const result = await repo.queryByUserIdAndType(req.query.userId, req.query.fileType, req.query?.status)
       return { data: result?.Items || [] }
     } catch (error: any) {
       console.log("Error Throw :: ", error)

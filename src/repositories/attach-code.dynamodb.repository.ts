@@ -84,7 +84,7 @@ export default class AttachCodeRepository {
 
   async queryWithFilenameBegin(str: string): Promise<any> {
     const params: DocumentClient.ScanInput = {
-      TableName: "cgl_attach_code",
+      TableName: process.env.TABLE_ATTACH_CODE || 'cgl_attach_code',
       FilterExpression: 'begins_with(#user_id, :user_id)',
       ExpressionAttributeValues: {
         ':user_id': str
@@ -96,27 +96,35 @@ export default class AttachCodeRepository {
     return await documentClient.scan(params).promise();
   }
 
-  async queryByUserIdAndType(userId: string = " ", type: string = " "): Promise<any> {
+  async queryByUserIdAndType(userId: string = " ", type: string = " ", status?: string): Promise<any> {
+    let FilterExpression = '#user_id = :user_id and #ty = :ty'
+    let ExpressionAttributeValues = {
+      ':user_id': userId,
+      ':ty': type
+    }
+    let ExpressionAttributeNames = {
+      '#user_id': "user_id",
+      "#ty": "type"
+    }
+    if(status) {
+      ExpressionAttributeNames['#st'] = "status"
+      ExpressionAttributeValues[':st'] =  status
+      FilterExpression = FilterExpression +  " and #st = :st"
+    }
     const params: DocumentClient.ScanInput = {
-      TableName: "cgl_attach_code",
-      FilterExpression: '#user_id = :user_id and #ty = :ty',
-      ExpressionAttributeValues: {
-        ':user_id': userId,
-        ':ty': type
-      },
-      ExpressionAttributeNames: {
-        '#user_id': "user_id",
-        "#ty": "type"
-      },
+      TableName: process.env.TABLE_ATTACH_CODE || 'cgl_attach_code',
+      FilterExpression,
+      ExpressionAttributeValues,
+      ExpressionAttributeNames,
     };
     return await documentClient.scan(params).promise();
   }
 
 }
 
-// const main = async () => {
-//   const repo = new AttachCodeRepository()
-//   const res = await repo.queryByUserIdAndType("artist88", "USER_DOC")
-//   console.log("Result : ", res)
-// }
-// main()
+const main = async () => {
+  const repo = new AttachCodeRepository()
+  const res = await repo.queryByUserIdAndType("artist88", "USER_DOC", "ACTIVE")
+  console.log("Result : ", res)
+}
+main()
