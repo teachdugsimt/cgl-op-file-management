@@ -1,8 +1,8 @@
 import { doesNotMatch } from 'assert/strict';
 import { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
-import { Controller, GET, POST, getInstanceByToken, FastifyInstanceToken } from 'fastify-decorators';
+import { Controller, GET, POST, DELETE, getInstanceByToken, FastifyInstanceToken } from 'fastify-decorators';
 import PingService from '../services/ping.service';
-import { fileSchema, uploadSchema, confirmSchema, fileByAttachCode } from './file.schema';
+import { fileSchema, uploadSchema, confirmSchema, fileByAttachCode, fileByName, deleteFileSchema } from './file.schema';
 import { uploadFile } from '../services/file.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
@@ -55,9 +55,48 @@ export default class FileController {
       let attach_array = typeof req.query.url == "string" ? JSON.parse(req.query.url) : req.query.url
       console.log("Step 1 : file-by-attach-code ", attach_array)
       const repo = new AttachCodeRepository()
-      const fileObject: FileObject[] = await repo.queryFromAttachCode(attach_array  || ['null'])
+      const fileObject: FileObject[] = await repo.queryFromAttachCode(attach_array || ['null'])
       console.log("File by atttach code result ::  ", fileObject)
       return { data: fileObject || [] }
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+  @GET({
+    url: '/file-by-name',
+    options: {
+      schema: fileByName
+    }
+  })
+  async queryByFileName(req: FastifyRequest<{ Querystring: { list: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+      let attach_array = typeof req.query.list == "string" ? JSON.parse(req.query.list) : req.query.list
+      console.log("Step 1 : file-by-name ", attach_array)
+      const repo = new AttachCodeRepository()
+      const fileObject: FileObject[] = await repo.QueryByFileName(attach_array || [])
+      console.log("File by name result ::  ", fileObject)
+      return { data: fileObject }
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+
+  @DELETE({
+    url: '/delete',
+    options: {
+      schema: deleteFileSchema
+    }
+  })
+  async deleteByAttachCode(req: FastifyRequest<{ Body: { list: string[] } }>, reply: FastifyReply): Promise<any> {
+    try {
+      let attach_array = typeof req.body == "string" ? JSON.parse(req.body).list : req.body.list
+      console.log("Step 1 : delete by attach ", attach_array)
+      const repo = new AttachCodeRepository()
+      const fileObject: FileObject[] = await repo.deleteFromAttachCode(attach_array || [])
+      console.log("Delete by attach code result ::  ", fileObject)
+      return { data: fileObject ? true : false }
     } catch (error: any) {
       console.log("Error Throw :: ", error)
       throw error

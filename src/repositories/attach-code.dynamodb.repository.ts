@@ -106,10 +106,10 @@ export default class AttachCodeRepository {
       '#user_id': "user_id",
       "#ty": "type"
     }
-    if(status) {
+    if (status) {
       ExpressionAttributeNames['#st'] = "status"
-      ExpressionAttributeValues[':st'] =  status
-      FilterExpression = FilterExpression +  " and #st = :st"
+      ExpressionAttributeValues[':st'] = status
+      FilterExpression = FilterExpression + " and #st = :st"
     }
     const params: DocumentClient.ScanInput = {
       TableName: process.env.TABLE_ATTACH_CODE || 'cgl_attach_code',
@@ -121,11 +121,58 @@ export default class AttachCodeRepository {
     return await documentClient.scan(params).promise();
   }
 
+
+  async QueryByFileName(fileNameList: string[]): Promise<any> {
+    if (!Array.isArray(fileNameList) || fileNameList.length < 1) return [];
+    let FilterExpression = ''
+    let ExpressionAttributeValues = {}
+    fileNameList.map((e, i) => {
+      if (i == 0)
+        FilterExpression = `#file_name = :fl${i}`
+      else FilterExpression = FilterExpression + ` or #file_name = :fl${i}`
+      ExpressionAttributeValues[`:fl${i}`] = e
+    })
+    let ExpressionAttributeNames = {
+      '#file_name': "file_name",
+    }
+    const params: DocumentClient.ScanInput = {
+      TableName: process.env.TABLE_ATTACH_CODE || 'cgl_attach_code',
+      FilterExpression,
+      ExpressionAttributeValues,
+      ExpressionAttributeNames,
+    };
+    console.log("Params Dynamo :: ", params)
+    const res = await documentClient.scan(params).promise();
+    return res?.Items || []
+  }
+
+  async deleteFromAttachCode(tokenArray: string[], table?: string): Promise<any> {
+    const mappingArray: { DeleteRequest: { Key: { attach_code: string } } }[] = []
+    const fromTable: string = table ? table : (process.env.TABLE_ATTACH_CODE || 'cgl_attach_code')
+    tokenArray.map(e => mappingArray.push({
+      DeleteRequest: {
+        Key: {
+          'attach_code': e
+        }
+      }
+    }))
+
+    const params: DocumentClient.BatchWriteItemInput = {
+      "RequestItems": {
+        [`${fromTable}`]: mappingArray
+      },
+    };
+    console.log("Params batch delete :: ", params.RequestItems.cgl_attach_code)
+    const data = await documentClient.batchWrite(params).promise()
+    return data
+  }
+
 }
 
 // const main = async () => {
 //   const repo = new AttachCodeRepository()
-//   const res = await repo.queryByUserIdAndType("artist88", "USER_DOC", "ACTIVE")
+//   const res = await repo.deleteFromAttachCode(['123',
+//    '234'])
 //   console.log("Result : ", res)
 // }
 // main()

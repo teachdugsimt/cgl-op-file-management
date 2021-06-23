@@ -58,6 +58,46 @@ export const fileByAttachCode: FastifySchema = {
   }
 }
 
+export const fileByName: FastifySchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      list: { type: 'string' }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: { type: 'array' },
+      },
+      additionalProperties: false
+    },
+
+    403: normalError,
+  }
+}
+
+export const deleteFileSchema: FastifySchema = {
+  body: {
+    type: 'object',
+    properties: {
+      list: { type: 'array', items: { type: 'string' } }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: { type: 'boolean' },
+      },
+      additionalProperties: false
+    },
+
+    403: normalError,
+  }
+}
+
 export const uploadSchema: FastifySchema = {
   body: {
     type: 'object',
