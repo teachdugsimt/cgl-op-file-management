@@ -2,7 +2,7 @@ import { doesNotMatch } from 'assert/strict';
 import { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
 import { Controller, GET, POST, getInstanceByToken, FastifyInstanceToken } from 'fastify-decorators';
 import PingService from '../services/ping.service';
-import { fileSchema, uploadSchema, confirmSchema } from './file.schema';
+import { fileSchema, uploadSchema, confirmSchema, fileByAttachCode } from './file.schema';
 import { uploadFile } from '../services/file.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
@@ -40,7 +40,27 @@ export default class FileController {
       return { data: result?.Items || [] }
     } catch (error: any) {
       console.log("Error Throw :: ", error)
-      return { message: JSON.stringify(error) }
+      throw error
+    }
+  }
+
+  @GET({
+    url: '/file-by-attach-code',
+    options: {
+      schema: fileByAttachCode
+    }
+  })
+  async getFileWithAttachCode(req: FastifyRequest<{ Querystring: { url: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+      let attach_array = typeof req.query.url == "string" ? JSON.parse(req.query.url) : req.query.url
+      console.log("Step 1 : file-by-attach-code ", attach_array)
+      const repo = new AttachCodeRepository()
+      const fileObject: FileObject[] = await repo.queryFromAttachCode(attach_array  || ['null'])
+      console.log("File by atttach code result ::  ", fileObject)
+      return { data: fileObject || [] }
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
     }
   }
 

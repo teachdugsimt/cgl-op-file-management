@@ -117,6 +117,7 @@ export default class AttachCodeRepository {
       ExpressionAttributeValues,
       ExpressionAttributeNames,
     };
+    console.log("Params Dynamo :: ", params)
     return await documentClient.scan(params).promise();
   }
 

@@ -38,6 +38,26 @@ export const fileSchema: FastifySchema = {
   }
 }
 
+export const fileByAttachCode: FastifySchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      url: { type: 'string' }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: { type: 'array' },
+      },
+      additionalProperties: false
+    },
+
+    403: normalError,
+  }
+}
+
 export const uploadSchema: FastifySchema = {
   body: {
     type: 'object',
