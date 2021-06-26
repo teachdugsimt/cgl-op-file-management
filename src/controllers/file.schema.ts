@@ -106,10 +106,9 @@ export const uploadSchema: FastifySchema = {
     200: {
       type: 'object',
       properties: {
-        attach_code: { type: 'string' },
+        attachCode: { type: 'string' },
         token: { type: 'string' },
-        file_name: { type: 'string' },
-        user_id: { type: 'string' },
+        fileName: { type: 'string' },
         type: { type: 'string' },
         status: { type: 'string' },
         fileUrl: { type: 'string' },

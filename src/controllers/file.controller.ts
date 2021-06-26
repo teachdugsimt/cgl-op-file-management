@@ -13,7 +13,6 @@ import { moveFileToS3 } from '../services/move-file-s3.service'
 interface FileObject {
   attach_code: string
   file_name: string
-  user_id: string
   type?: string
   status?: string
   expire?: number | string
@@ -94,7 +93,7 @@ export default class FileController {
       let attach_array = typeof req.body == "string" ? JSON.parse(req.body).list : req.body.list
       console.log("Step 1 : delete by attach ", attach_array)
       const repo = new AttachCodeRepository()
-      const fileObject: FileObject[] = await repo.deleteFromAttachCode(attach_array || [])
+      const fileObject: any = await repo.deleteFromAttachCode(attach_array || [])
       console.log("Delete by attach code result ::  ", fileObject)
       return { data: fileObject ? true : false }
     } catch (error: any) {
@@ -118,7 +117,6 @@ export default class FileController {
 
       // USER_AVATAR | USER_DOC | VEHICLE_DOC | VEHICLE_IMAGE/{FRONT,BACK,LEFT,RIGHT}
       const path: string = bodyTemp?.path?.value
-      const userId: string = bodyTemp?.userId?.value || ''
 
       // const fileBuff: Buffer = await bodyTemp.file.toBuffer()
       const fileBuff: Buffer = bodyTemp.file._buf
@@ -127,7 +125,7 @@ export default class FileController {
       const frontPath: string = path.split("/").slice(0, path.split("/").length - 2).join("/")
       const statusPath: string = path.split("/").slice(path.split("/").length - 2).join("")
       const today = new Date()
-      const parseFileName = `${userId}-${frontPath.replace("/", "-")}-${today.getTime()}`
+      const parseFileName = `${frontPath.replace("/", "-")}-${today.getTime()}`
 
       const uploadResult = await uploadFile(fileBuff, {
         Bucket: "cargolink-documents",
@@ -136,18 +134,20 @@ export default class FileController {
 
       let response: any
       if (uploadResult && Object.keys(uploadResult).length > 0) {
-        response = await processAttachCode(parseFileName, userId, frontPath, statusPath)
+        response = await processAttachCode(parseFileName, frontPath, statusPath)
         console.log("Response ::  ", response)
         return {
           ...response,
-          token: response.attach_code,
+          token: response.attachCode,
           fileUrl: uploadResult.Location,
           fileType: bodyTemp.file.mimetype,
           uploadedDate: new Date()
         }
       } else return {
-        file_name: null,
-        attach_code: null,
+        fileName: null,
+        attachCode: null,
+        type: null,
+        status: null,
         token: null,
         fileUrl: null,
         fileType: null,
