@@ -30,13 +30,16 @@ export default class FileController {
       schema: fileSchema
     }
   })
-  async getHandler(req: FastifyRequest<{ Querystring: { userId: string, fileType: string, status?: string } }>, reply: FastifyReply): Promise<object> {
+  async getHandler(req: FastifyRequest<{ Querystring: { attach_code: string } }>, reply: FastifyReply): Promise<object> {
     try {
       console.log("Param : ", req.query)
       const repo = new AttachCodeRepository()
-      const result = await repo.queryByUserIdAndType(req.query.userId, req.query.fileType, req.query?.status)
+      const result = await repo.findByAttachCode(req.query.attach_code)
+      const uriS3: string = `${process.env.S3_URL || "https://cargolink-documents.s3.ap-southeast-1.amazonaws.com"}` +
+        `/${result.type}/${result.status}/${result.file_name}`
+
       console.log("Result :: ", result)
-      return { data: result?.Items || [] }
+      return { uri: uriS3 }
     } catch (error: any) {
       console.log("Error Throw :: ", error)
       throw error

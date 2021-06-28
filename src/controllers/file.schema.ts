@@ -20,18 +20,12 @@ export const fileSchema: FastifySchema = {
   querystring: {
     type: 'object',
     properties: {
-      userId: { type: 'string' },
-      fileType: { type: 'string' },
-      status: { type: 'string' },
+      attach_code: { type: 'string' },
     }
   },
   response: {
     200: {
-      type: 'object',
-      properties: {
-        data: { type: 'array' },
-      },
-      additionalProperties: false
+      type: 'object', properties: { uri: { type: 'string' } }
     },
 
     403: normalError,
