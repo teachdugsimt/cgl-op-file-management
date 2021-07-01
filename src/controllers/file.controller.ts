@@ -8,7 +8,7 @@ import {
 } from './file.schema';
 import {
   uploadFile, getFileFromS3, getFileFromS3V2, generateImageFromAttachCode, streamToString,
-  attachUrl,
+  attachUrl, getFileFromS3V3,
 } from '../services/file.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
@@ -20,8 +20,10 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
-import { createWriteStream, readFile, readFileSync } from "fs";
-import path from 'path/posix';
+import fs, { createWriteStream, readFile, readFileSync } from "fs";
+import path, { dirname } from 'path/posix';
+import stream from 'stream'
+import axios from 'axios'
 // import BuildResponse from "utility-layer/dist/build-response";
 // const buildResponse = new BuildResponse()
 
@@ -46,12 +48,12 @@ export default class FileController {
       schema: fileSchema
     }
   })
-  async getHandler(req: FastifyRequest<{ Querystring: { attach_code: string, file_name?: string } }>, reply: FastifyReply): Promise<object> {
+  async getHandler(req: FastifyRequest<{ Querystring: { url: string, file_name?: string } }>, reply: FastifyReply): Promise<object> {
     try {
       console.log("Param : ", req.query)
       const repo = new AttachCodeRepository()
-      if (req.query.attach_code) {
-        const result = await repo.findByAttachCode(req.query.attach_code)
+      if (req.query.url) {
+        const result = await repo.findByAttachCode(req.query.url)
         const uriS3: string = `${process.env.S3_URL || "https://cargolink-documents.s3.ap-southeast-1.amazonaws.com"}` +
           `/${result.type}/${result.status}/${result.file_name}`
         console.log("Result attcode:: ", result)
@@ -77,11 +79,11 @@ export default class FileController {
       schema: fileStreamSchema
     }
   })
-  async getFileStreamHandler(req: FastifyRequest<{ Querystring: { attach_code: string } }>, reply: FastifyReply): Promise<any> {
+  async getFileStreamHandler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
     try {
       console.log("Param : ", req.query)
 
-      const objectFile: any = await generateImageFromAttachCode(req.query.attach_code)
+      const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
       const result = await getFileFromS3(objectFile)
 
       console.log("Result file 1 :: ", result)
@@ -102,10 +104,10 @@ export default class FileController {
       schema: fileStreamSchema
     }
   })
-  async getFileStream2Handler(req: FastifyRequest<{ Querystring: { attach_code: string } }>, reply: FastifyReply): Promise<any> {
+  async getFileStream2Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
     try {
       // PART 6
-      const objectFile: any = await generateImageFromAttachCode(req.query.attach_code)
+      const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
       const result = await getFileFromS3V2(objectFile)
 
       console.log("Result file 2 :: ", result)
@@ -135,6 +137,104 @@ export default class FileController {
       // const encodedBuffer = result.bodyContents.toString('base64')
       // const toSendBuffer = Buffer.from(`data:image/jpeg:base64,${encodedBuffer}`)
       // reply.send(toSendBuffer)
+
+
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+
+  @GET({
+    url: '/file-stream-three',
+    options: {
+      schema: fileStreamSchema
+    }
+  })
+  async getFileStream3Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+      // PART 6
+      // const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
+      // const result = await getFileFromS3V3(objectFile)
+      // console.log("Result file 3 :: ", result)
+      // reply.type('image/png').send(result)
+
+      // v1.1
+      // reply.type('image/png').send(result)
+
+      // v1.2
+      // reply.type('image/png')
+      // result.pipe(reply.raw)
+
+      // let had_error = false;
+      // result.on('error', function (err) {
+      //   console.log("On open error : ", err)
+      //   had_error = true;
+      // });
+      // result.on('close', function () {
+      //   console.log("On close server")
+      //   // if (!had_error) fs.unlink('<filepath>/example.pdf');
+      // });
+
+
+
+
+
+      const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
+      const result = await getFileFromS3V2(objectFile)
+      reply.send(result.bodyContents)
+      // Create a buffer to hold the response chunks
+      // "Content-Type": result.data.ContentType
+      // "Content-Length": result.data.ContentLength
+      // var buffer = new stream.Readable({});
+      // buffer._read = () => { };
+
+      // // Generate 5 chunks with 1 second interval
+      // var count = 5;
+      // var emit = () => {
+      //   var data = `${result.bodyContents}`;
+      //   console.log(`sending "${data}"`);
+      //   buffer.push(data);
+
+      //   count--;
+      //   if (count > 0) {
+      //     setTimeout(emit, 1000);
+      //   }
+      //   else {
+      //     console.log('end sending.');
+      //     buffer.push(null);
+      //   }
+      // };
+
+      // emit();
+      // reply.type('text/html').send(buffer)
+
+
+
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+
+  @GET({
+    url: '/file-stream-four',
+    options: {
+      schema: fileStreamSchema
+    }
+  })
+  async getFileStream4Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+      const res = await axios.get('https://2kgrbiwfnc.execute-api.ap-southeast-1.amazonaws.com/prod/cert_15750.jpg', {
+        // headers: { 'Accept': '*/*', }
+      })
+
+      reply.headers({
+        ...res.headers,
+        "Content-Type": "image/png",
+        "Content-Length": res.headers['Content-Length'] * 1.2,
+        "Connection": "keep-alive"
+      }).send(res.data)
 
 
     } catch (error: any) {
@@ -187,80 +287,79 @@ export default class FileController {
   //   }
   // }
 
-  @GET({
-    url: '/file-stream-four',
-    options: {
-      schema: fileStreamSchema
-    }
-  })
-  async getFileStream4Handler(req: FastifyRequest<{ Querystring: { attach_code: string } }>, reply: FastifyReply): Promise<any> {
-    try {
-      // PART 6
-      // const s3Client = new S3Client({ region: 'ap-southeast-1' });
-      // const command = new GetObjectCommand({
-      //   Bucket: 'cargolink-documents',
-      //   Key: `VEHICLE_IMAGE/BACK/ACTIVE/VEHICLE_IMAGE-BACK-1624536708479`,
-      // });
-      // const s3Item = await s3Client.send(command);
+  // @GET({
+  //   url: '/file-stream-four',
+  //   options: {
+  //     schema: fileStreamSchema
+  //   }
+  // })
+  // async getFileStream4Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
+  //   try {
+  //     // PART 6
+  //     // const s3Client = new S3Client({ region: 'ap-southeast-1' });
+  //     // const command = new GetObjectCommand({
+  //     //   Bucket: 'cargolink-documents',
+  //     //   Key: `VEHICLE_IMAGE/BACK/ACTIVE/VEHICLE_IMAGE-BACK-1624536708479`,
+  //     // });
+  //     // const s3Item = await s3Client.send(command);
+
+  //     // Part  7
+  //     // const buffer = readFileSync(s3Item.Body) // sync just for DEMO
+  //     // const myStream = new Readable({
+  //     //   read() {
+  //     //     this.push(buffer)
+  //     //     this.push(null)
+  //     //   }
+  //     // })
+  //     // console.log("My stream :: ", myStream)
+  //     // reply.headers({
+  //     //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
+  //     //   "Content-Length": s3Item?.ContentLength, // 461751
+  //     //   "Content-Handling": 'CONVERT_TO_BINARY'
+  //     // }).type('image/png').send(myStream)
 
 
-      // Part  7
-      // const buffer = readFileSync(s3Item.Body) // sync just for DEMO
-      // const myStream = new Readable({
-      //   read() {
-      //     this.push(buffer)
-      //     this.push(null)
-      //   }
-      // })
-      // console.log("My stream :: ", myStream)
-      // reply.headers({
-      //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
-      //   "Content-Length": s3Item?.ContentLength, // 461751
-      //   "Content-Handling": 'CONVERT_TO_BINARY'
-      // }).type('image/png').send(myStream)
+  //     // Part 8
+  //     // const buffer = readFileSync(s3Item.Body)
+  //     // reply.headers({
+  //     //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
+  //     //   "Content-Length": s3Item?.ContentLength, // 461751
+  //     //   "Content-Handling": 'CONVERT_TO_BINARY'
+  //     // }).type('image/png') // if you don't set the content, the image would be downloaded by browser instead of viewed
+  //     //   .send(buffer)
+
+  //     // reply.headers({
+  //     //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
+  //     //   "Content-Length": s3Item?.ContentLength, // 461751
+  //     //   "Content-Handling": 'CONVERT_TO_BINARY'
+  //     // }).type('image/png').send(s3Item.Body)
+
+  //     // PART 9
+  //     // const writeStream = createWriteStream(s3Item.Body, 'utf-8')
+  //     // reply.headers({
+  //     //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
+  //     //   "Content-Length": s3Item?.ContentLength, // 461751
+  //     //   "Content-Handling": 'CONVERT_TO_BINARY'
+  //     // }).type('image/png').send(writeStream)
+
+  //     // PART 12
+  //     // const buffer = readFileSync("./dist/controllers/IMG_1049.png")
+  //     // console.log("Real buffer return :: ", buffer)
+  //     // reply.type('image/png') // if you don't set the content, the image would be downloaded by browser instead of viewed
+  //     //   .send(buffer)
 
 
-      // Part 8
-      // const buffer = readFileSync(s3Item.Body)
-      // reply.headers({
-      //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
-      //   "Content-Length": s3Item?.ContentLength, // 461751
-      //   "Content-Handling": 'CONVERT_TO_BINARY'
-      // }).type('image/png') // if you don't set the content, the image would be downloaded by browser instead of viewed
-      //   .send(buffer)
+  //     // PART 13
+  //     const buffer = readFileSync("./dist/controllers/IMG_1049.png")
+  //     const encodedBuffer = buffer.toString('base64')
+  //     const toSendBuffer = Buffer.from(`data:image/jpeg:base64,${encodedBuffer}`)
+  //     reply.send(toSendBuffer)
 
-      // reply.headers({
-      //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
-      //   "Content-Length": s3Item?.ContentLength, // 461751
-      //   "Content-Handling": 'CONVERT_TO_BINARY'
-      // }).type('image/png').send(s3Item.Body)
-
-      // PART 9
-      // const writeStream = createWriteStream(s3Item.Body, 'utf-8')
-      // reply.headers({
-      //   "Content-Type": s3Item?.ContentType, // binary/octet-stream, image/png, application/octet-stream
-      //   "Content-Length": s3Item?.ContentLength, // 461751
-      //   "Content-Handling": 'CONVERT_TO_BINARY'
-      // }).type('image/png').send(writeStream)
-
-      // PART 12
-      // const buffer = readFileSync("./dist/controllers/IMG_1049.png")
-      // console.log("Real buffer return :: ", buffer)
-      // reply.type('image/png') // if you don't set the content, the image would be downloaded by browser instead of viewed
-      //   .send(buffer)
-
-
-      // PART 13
-      const buffer = readFileSync("./dist/controllers/IMG_1049.png")
-      const encodedBuffer = buffer.toString('base64')
-      const toSendBuffer = Buffer.from(`data:image/jpeg:base64,${encodedBuffer}`)
-      reply.send(toSendBuffer)
-
-    } catch (error: any) {
-      console.log("Error Throw :: ", error)
-      throw error
-    }
-  }
+  //   } catch (error: any) {
+  //     console.log("Error Throw :: ", error)
+  //     throw error
+  //   }
+  // }
 
 
 

@@ -20,7 +20,7 @@ export const fileSchema: FastifySchema = {
   querystring: {
     type: 'object',
     properties: {
-      attach_code: { type: 'string', nullable: true },
+      url: { type: 'string', nullable: true },
       file_name: { type: 'string', nullable: true },
     }
   },
@@ -41,7 +41,7 @@ export const fileStreamSchema: FastifySchema = {
   querystring: {
     type: 'object',
     properties: {
-      attach_code: { type: 'string' },
+      attachCode: { type: 'string' },
     }
   },
   response: {

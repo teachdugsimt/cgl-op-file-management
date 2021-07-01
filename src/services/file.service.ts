@@ -123,6 +123,15 @@ export const getFileFromS3V2 = async (objectFile: AttachCodeModel) => {
 }
 // getFileFromS3V2() // Buffer : ff 32 aa
 
+export const getFileFromS3V3 = async (objectFile: AttachCodeModel) => {
+  var params = {
+    Bucket: process.env.BUCKET_DOCUMENT || "cargolink-documents",
+    Key: `${objectFile.type}/${objectFile.status}/${objectFile.file_name}`,
+  };
+  const s3 = new AWS.S3()
+
+  return s3.getObject(params).createReadStream()
+}
 
 export const generateImageFromAttachCode = async (attach_code: string): Promise<object> => {
   const repo = new AttachCodeRepository()
