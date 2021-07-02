@@ -10,6 +10,7 @@ import {
   uploadFile, getFileFromS3, getFileFromS3V2, generateImageFromAttachCode, streamToString,
   attachUrl, getFileFromS3V3,
 } from '../services/file.service'
+// import { streamDowloader } from '../services/s3.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { moveFileToS3 } from '../services/move-file-s3.service'
@@ -242,6 +243,83 @@ export default class FileController {
       throw error
     }
   }
+
+
+
+
+  @GET({
+    url: '/file-stream-five',
+    options: {
+      schema: fileStreamSchema
+    }
+  })
+  async getFileStream5Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+
+      const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
+      const result = await getFileFromS3V2(objectFile)
+
+      var decodedBuffer = Buffer.alloc(result.data.ContentLength, result.bodyContents, "base64");
+      reply.headers({
+        headers: { 'Content-Type': 'image/png', 'Content-Length': decodedBuffer.length },
+      }).status(200).send(decodedBuffer)
+
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+
+  @GET({
+    url: '/file-stream-six',
+    options: {
+      schema: fileStreamSchema
+    }
+  })
+  async getFileStream6Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+
+      const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
+      const result = await getFileFromS3V2(objectFile)
+
+      reply.headers({ "Content-Type": "binary/octet-stream" }).send(result.bodyContents.getReader())
+
+      // const buffer = result.bodyContents
+      // const encodedBuffer = buffer.toString('base64')
+      // const toSendBuffer = Buffer.from(`data:image/png:base64,${encodedBuffer}`)
+      // reply.headers({"Content-Type": "binary/octet-stream"}).send(toSendBuffer)
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+
+
+  @GET({
+    url: '/file-stream-seven',
+    options: {
+      schema: fileStreamSchema
+    }
+  })
+  async getFileStream7Handler(req: FastifyRequest<{ Querystring: { attachCode: string } }>, reply: FastifyReply): Promise<any> {
+    try {
+
+      // const streamFiles = new S3Controller()
+      // reply.send(streamFiles.getFiles())
+
+      // streamDowloader(reply)
+      reply.status(200).send({})
+    } catch (error: any) {
+      console.log("Error Throw :: ", error)
+      throw error
+    }
+  }
+
+
+
+
+
+
 
   // @GET({
   //   url: '/file-stream-three',
