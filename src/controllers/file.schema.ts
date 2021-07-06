@@ -46,8 +46,8 @@ export const fileStreamSchema: FastifySchema = {
   },
   response: {
     200: {
-      type: 'object',
-      isFileType: true
+      // type: 'object',
+      // isFileType: true
     },
     403: normalError,
   }

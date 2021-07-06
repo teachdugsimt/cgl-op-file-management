@@ -8,6 +8,7 @@ import {
   UploadPartCommandInput,
   GetObjectCommand,
 } from '@aws-sdk/client-s3'
+import S3 from 'aws-sdk/clients/s3'
 import AWS from 'aws-sdk'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { Readable } from 'stream';
@@ -133,6 +134,24 @@ export const getFileFromS3V3 = async (objectFile: AttachCodeModel) => {
   return s3.getObject(params).createReadStream()
 }
 
+export const getFileFromS3V4 = async (objectFile: AttachCodeModel) => {
+  var params = {
+    Bucket: process.env.BUCKET_DOCUMENT || "cargolink-documents",
+    Key: `${objectFile.type}/${objectFile.status}/${objectFile.file_name}`,
+  };
+  const s3 = new S3()
+
+  return s3.getObject(params).createReadStream()
+}
+
+export const getFileFromS3V5 = () => {
+  var params = {
+    Bucket: "cargolink-documents",
+    Key: `VEHICLE_IMAGE/FRONT/INPROGRESS/VEHICLE_IMAGE-FRONT-1624969284810.PNG`,
+  };
+  const s3 = new S3()
+  return s3.getObject(params).createReadStream()
+}
 export const generateImageFromAttachCode = async (attach_code: string): Promise<object> => {
   const repo = new AttachCodeRepository()
   const result: AttachCodeModel = await repo.findByAttachCode(attach_code)
@@ -197,5 +216,4 @@ const generateLinkWithS3 = async (bucket: string, key: string) => {
   const s3 = new AWS.S3({ region })
   const urlTest = await s3.getSignedUrlPromise('putObject', params)
   console.log("data : ", urlTest)
-
 }
