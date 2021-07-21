@@ -8,9 +8,6 @@ import configSwagger from './config/swagger'
 import path from 'path';
 import { FastifyStaticOptions } from 'fastify-static'
 import staticy from 'fastify-static'
-import fs from 'fs'
-import pump from 'pump'
-import { getFileFromS3V5 } from './services/file.service'
 
 function build(opts: object = configApp) {
   const app = fastify(opts)
@@ -20,25 +17,6 @@ function build(opts: object = configApp) {
     root: path.join(__dirname, '..', 'common', 'static'),
     // prefix: '/assets/'
   } as FastifyStaticOptions);
-
-  app.addHook('onSend', async (req: FastifyRequest, reply: FastifyReply, payload: RequestPayload) => {
-    if (req && req.url && req.url.includes("/file-stream-eight")) {
-      return new Promise((resolve, reject) => {
-        const stream = getFileFromS3V5()
-        stream.pipe(reply.raw).setHeader("Content-Type", "image/png")
-        stream.on('error', (err) => {
-          console.log("Error file stream : ", err)
-        })
-        stream.once('finish', resolve)
-        // reply.once('finish', resolve)
-      })
-    } else {
-      return payload
-    }
-  })
-
-
-
 
   app.register(require('fastify-cors'), {
     origin: (origin, cb) => {
@@ -62,8 +40,6 @@ function build(opts: object = configApp) {
     directory: resolve(__dirname, `controllers`),
     mask: /\.controller\./,
   });
-
-
 
   return app
 }

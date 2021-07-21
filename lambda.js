@@ -1,16 +1,21 @@
 const awsLambdaFastify = require('aws-lambda-fastify');
 const app = require('./dist/server');
 
-const proxy = awsLambdaFastify(app);
+// const proxy = awsLambdaFastify(app);
 // or
-// const proxy = awsLambdaFastify(app, { binaryMimeTypes: ['application/octet-stream', "application/json"] })
+const proxy = awsLambdaFastify(app, {
+  binaryMimeTypes: ['image/png', 'image/jpg', 'image/jpeg', 'application/octet-stream',
+    'multipart/form-data', 'application/pdf']
+})
 
 // exports.handler = proxy
 exports.handler = (event, context, callback) => {
   console.log('event :>> ', event);
   console.log('context :>> ', context);
   context.callbackWaitsForEmptyEventLoop = false;
-  proxy(event, context, callback);
+  if (event.path && event.path.includes('file-stream-twelve'))
+    proxy(event, context, callback);
+  else proxy(event, context, callback);
 };
 // or
 // exports.handler = (event, context, callback) => proxy(event, context, callback)

@@ -12,7 +12,6 @@ import S3 from 'aws-sdk/clients/s3'
 import AWS from 'aws-sdk'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { Readable } from 'stream';
-import { TextDecoder } from 'util';
 
 
 const region = process.env.AWS_REGION || 'ap-southeast-1'
@@ -166,39 +165,6 @@ export async function streamToString(stream: Readable): Promise<string> {
     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
   });
 }
-
-// export const streamToString2 = (stream: any) => {
-//   return new Promise((resolve, reject) => {
-//     if (stream instanceof ReadableStream === false) {
-//       reject(
-//         "Expected stream to be instance of ReadableStream, but got " +
-//           typeof stream
-//       );
-//     }
-//     let text = "";
-//     const decoder = new TextDecoder("utf-8");
-
-//     const reader = stream.getReader();
-//     const processRead = ({ done, value }) => {
-//       if (done) {
-//         // resolve promise with chunks
-//         console.log("done");
-//         // resolve(Buffer.concat(chunks).toString("utf8"));
-//         resolve(text);
-//         return;
-//       }
-
-//       text += decoder.decode(value);
-
-//       // Not done, keep reading
-//       reader.read().then(processRead);
-//     };
-
-//     // start read
-//     reader.read().then(processRead);
-//   });
-// };
-
 export interface AttachCodeModel {
   attach_code: string
   file_name: string
@@ -211,9 +177,16 @@ export interface AttachCodeModel {
 const generateLinkWithS3 = async (bucket: string, key: string) => {
   var params = {
     Bucket: bucket || 'cargolink-documents',
-    Key: key || `VEHICLE_IMAGE/FRONT/INPROGRESS/VEHICLE_IMAGE-FRONT-1624969284810.PNG`,
+    Key: key || `VEHICLE_IMAGE/FRONT/INPROGRESS/VEHICLE_IMAGE-FRONT-1626728769307.PNG`,
   };
   const s3 = new AWS.S3({ region })
   const urlTest = await s3.getSignedUrlPromise('putObject', params)
   console.log("data : ", urlTest)
 }
+
+export const getLinkS3 = (file: AttachCodeModel) => {
+  return `https://${process.env.BUCKET_DOCUMENT || 'cargolink-documents'}.s3.ap-southeast-1.amazonaws.com/${file.type}/${file.status}/${file.file_name}`
+}
+
+// generateLinkWithS3("cargolink-documents", 'VEHICLE_IMAGE/FRONT/INPROGRESS/VEHICLE_IMAGE-FRONT-1626728769307.PNG')
+
