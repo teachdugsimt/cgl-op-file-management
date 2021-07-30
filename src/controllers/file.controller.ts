@@ -39,7 +39,7 @@ interface FileObject {
   url?: string
 }
 
-@Controller({ route: '/api/v1/media/' })
+@Controller({ route: '/api/v1/media' })
 export default class FileController {
 
   private pingService = getInstanceByToken<PingService>(PingService);
