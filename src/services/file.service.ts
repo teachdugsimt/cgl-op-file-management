@@ -145,7 +145,7 @@ export const getFileFromS3V4 = async (objectFile: AttachCodeModel) => {
 
 export const getFileFromS3V5 = () => {
   var params = {
-    Bucket: "cargolink-documents",
+    Bucket: process.env.BUCKET_DOCUMENT || "cargolink-documents",
     Key: `VEHICLE_IMAGE/FRONT/INPROGRESS/VEHICLE_IMAGE-FRONT-1624969284810.PNG`,
   };
   const s3 = new S3()

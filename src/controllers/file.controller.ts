@@ -560,7 +560,7 @@ export default class FileController {
       const parseFileName = `${frontPath.replace("/", "-")}-${today.getTime()}${fileExtendsion}`
 
       const uploadResult = await uploadFile(fileBuff, {
-        Bucket: "cargolink-documents",
+        Bucket: process.env.BUCKET_DOCUMENT || "cargolink-documents",
         Key: `${path}${parseFileName}`,
       })
 
@@ -613,9 +613,9 @@ export default class FileController {
 
         const loopResult = await Promise.all(parseFileObject.map(async e => {
           const srcPath: string = `${e.type}/INPROGRESS/${e.file_name}`
-          const srcBucket: string = process.env.bucket || "cargolink-documents"
+          const srcBucket: string = process.env.BUCKET_DOCUMENT || "cargolink-documents"
           const destPath: string = `${e.type}/ACTIVE/`
-          const destBucket: string = process.env.bucket || "cargolink-documents"
+          const destBucket: string = process.env.BUCKET_DOCUMENT || "cargolink-documents"
           const region: string = process.env.region || 'ap-southeast-1'
           console.log("Object detail :: ", {
             srcPath,
