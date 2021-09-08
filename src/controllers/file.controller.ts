@@ -1,34 +1,17 @@
-import { doesNotMatch } from 'assert/strict';
-import fastify, { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
+import { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
 import { Controller, GET, POST, DELETE, getInstanceByToken, FastifyInstanceToken } from 'fastify-decorators';
 import PingService from '../services/ping.service';
 import {
   fileSchema, uploadSchema, confirmSchema, fileByAttachCode, fileByName, deleteFileSchema,
-  fileStreamSchema, fileStreamSchema2
+  fileStreamSchema
 } from './file.schema';
 import {
-  uploadFile, getFileFromS3, getFileFromS3V2, generateImageFromAttachCode, streamToString,
-  attachUrl, getFileFromS3V3, getFileFromS3V4, getFileFromS3V5, getLinkS3
+  uploadFile, getFileFromS3, getFileFromS3V2, generateImageFromAttachCode,
+  attachUrl
 } from '../services/file.service'
-// import { streamDowloader } from '../services/s3.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { moveFileToS3 } from '../services/move-file-s3.service'
-import AWS from 'aws-sdk'
-import { Response } from 'node-fetch'
-import {
-  S3Client,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import { Readable } from "stream";
-import fs, { createWriteStream, readFile, readFileSync } from "fs";
-import { resolve } from 'path';
-import stream from 'stream'
-import axios from 'axios'
-import S3 from 'aws-sdk/clients/s3'
-import { encode } from 'punycode';
-// import BuildResponse from "utility-layer/dist/build-response";
-// const buildResponse = new BuildResponse()
 
 interface FileObject {
   attach_code: string
@@ -88,13 +71,14 @@ export default class FileController {
 
       const objectFile: any = await generateImageFromAttachCode(req.query.attachCode)
       const result = await getFileFromS3(objectFile)
-
+      
       console.log("Result file 1 :: ", result)
-
-      reply.headers({
-        "Content-Type": result.data.ContentType, // binary/octet-stream, image/png, application/octet-stream
-        "Content-Length": result.data.ContentLength, // 461751
-      }).type('image/png').send(result.bodyContents)
+      const type_file: string = objectFile?.file_name && objectFile.file_name.toLowerCase().includes('.pdf') ?
+        'application/pdf' : 'image/png'
+        reply.headers({
+          "Content-Type": result.data.ContentType, // binary/octet-stream, image/png, application/octet-stream
+          "Content-Length": result.data.ContentLength, // 461751
+        }).type(type_file).send(result.bodyContents)
 
     } catch (error: any) {
       console.log("Error Throw :: ", error)
@@ -114,11 +98,12 @@ export default class FileController {
       const result = await getFileFromS3V2(objectFile)
 
       console.log("Result file 2 :: ", result)
-
+      const type_file: string = objectFile?.file_name && objectFile.file_name.toLowerCase().includes('.pdf') ?
+      'application/pdf' : 'image/png'
       reply.headers({
         "Content-Type": result.data.ContentType, // binary/octet-stream, image/png, application/octet-stream
         "Content-Length": result.data.ContentLength, // 461751
-      }).type('image/png').send(result.bodyContents)
+      }).type(type_file).send(result.bodyContents)
 
     } catch (error: any) {
       console.log("Error Throw :: ", error)
@@ -260,9 +245,8 @@ export default class FileController {
       const fileObject: FileObject[] = await repo.queryFromAttachCode(attach_array)
       console.log("File name object :: ", fileObject)
 
-      if (fileObject && Array.isArray(fileObject) && fileObject.length > 0) {
-
-        let parseFileObject = fileObject.filter(e => e.status && e.status == "INPROGRESS")
+      let parseFileObject = fileObject.filter(e => e.status && e.status == "INPROGRESS")
+      if (fileObject && Array.isArray(fileObject) && fileObject.length > 0 && parseFileObject && parseFileObject.length > 0) {
 
         const loopResult = await Promise.all(parseFileObject.map(async e => {
           const srcPath: string = `${e.type}/INPROGRESS/${e.file_name}`
@@ -289,7 +273,7 @@ export default class FileController {
 
 
 
-      } else return { message: "Don't have these attach_code in database" }
+      } else return { message: "Don't have these INPROGRESS attach_code in database" }
 
     } catch (error) {
       console.log("Error Throw :: ", error)

@@ -188,5 +188,5 @@ export const getLinkS3 = (file: AttachCodeModel) => {
   return `https://${process.env.BUCKET_DOCUMENT || 'cargolink-documents'}.s3.ap-southeast-1.amazonaws.com/${file.type}/${file.status}/${file.file_name}`
 }
 
-// generateLinkWithS3("cargolink-documents", 'VEHICLE_IMAGE/FRONT/INPROGRESS/VEHICLE_IMAGE-FRONT-1626728769307.PNG')
+// generateLinkWithS3("cargolink-documents", 'USER_DOC/ACTIVE/USER_DOC-1625477727808.pdf')
 
