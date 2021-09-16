@@ -38,7 +38,6 @@
     "fastify-swagger": "^4.7.0",
     "node-fetch": "^2.6.1",
     "pino-pretty": "^4.7.1",
-    "rxjs": "^7.1.0",
     "utility-layer": "git+https://git-codecommit.ap-southeast-1.amazonaws.com/v1/repos/utility-layer#master"
   },
   "devDependencies": {

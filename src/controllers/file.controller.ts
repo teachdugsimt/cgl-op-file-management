@@ -7,26 +7,26 @@ import {
   fileStreamSchema, fileStreamSchema2
 } from './file.schema';
 import {
-  uploadFile, getFileFromS3, getFileFromS3V2, generateImageFromAttachCode, streamToString,
-  attachUrl, getFileFromS3V3, getFileFromS3V4, getFileFromS3V5, getLinkS3
+  uploadFile, getFileFromS3, getFileFromS3V2, generateImageFromAttachCode, attachUrl,
+  // getFileFromS3V3, getFileFromS3V4, getFileFromS3V5, getLinkS3,streamToString
 } from '../services/file.service'
 // import { streamDowloader } from '../services/s3.service'
 import { processAttachCode } from '../services/generate-attach-code.service'
 import AttachCodeRepository from '../repositories/attach-code.dynamodb.repository'
 import { moveFileToS3 } from '../services/move-file-s3.service'
-import AWS from 'aws-sdk'
-import { Response } from 'node-fetch'
-import {
-  S3Client,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import { Readable } from "stream";
-import fs, { createWriteStream, readFile, readFileSync } from "fs";
-import { resolve } from 'path';
-import stream from 'stream'
-import axios from 'axios'
-import S3 from 'aws-sdk/clients/s3'
-import { encode } from 'punycode';
+// import AWS from 'aws-sdk'
+// import { Response } from 'node-fetch'
+// import {
+//   S3Client,
+//   GetObjectCommand,
+// } from "@aws-sdk/client-s3";
+// import { Readable } from "stream";
+// import fs, { createWriteStream, readFile, readFileSync } from "fs";
+// import { resolve } from 'path';
+// import stream from 'stream'
+// import axios from 'axios'
+// import S3 from 'aws-sdk/clients/s3'
+// import { encode } from 'punycode';
 // import BuildResponse from "utility-layer/dist/build-response";
 // const buildResponse = new BuildResponse()
 
