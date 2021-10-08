@@ -117,3 +117,6 @@ dist
 
 yarn.lock
 package-lock.json
+
+# sonarqube
+.scannerwork/
