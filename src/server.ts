@@ -7,7 +7,7 @@ const server = build()
 if (require.main === module) {
   const start = async () => {
     try {
-      await server.listen(3000)
+      await server.listen(3001)
       server.blipp()
     } catch (err) {
       server.log.error(err)
